@@ -1,9 +1,11 @@
 require("dotenv").config();
 const config = require("./config.json");
 const mongoose = require("mongoose");
-mongoose.connect(config.connectionString)
+mongoose.connect(process.env.MONGODB_CONNECTION_STRING)
+  .then(() => console.log("✅ MongoDB connected successfully"))
+  .catch(err => console.log("❌ MongoDB error:", err.message));
 
-const User = require("./models/user.model")
+const User = require("./models/user")
 const Note = require("./models/note.model")
 
 const express = require("express")
@@ -11,124 +13,38 @@ const cors = require("cors")
 const app = express()
 const jwt = require("jsonwebtoken");
 const {authenticateToken} =require("./utilities")
+const userRouter = require('./routes/userRouter')
 
 app.use(express.json())
 app.use(
     cors({ origin: "*", })
 )
-// raj@gmail.com
-
-// Create Account 
-app.post("/create-account", async (req, res) => {
-  try {
-    console.log("Route hit ✅", req.body);
-
-    const { fullName, email, password } = req.body;
-    console.log("request body", req.body);
-
-    if (!fullName) {
-      return res.status(400).json({ error: true, message: "Full Name is required" });
-    }
-    if (!email) {
-      return res.status(400).json({ error: true, message: "Email is required" });
-    }
-    if (!password) {
-      return res.status(400).json({ error: true, message: "Password is required" });
-    }
-
-    const isUser = await User.findOne({ email: email });
-    if (isUser) {
-      return res.json({ error: true, message: "User already exists" });
-    }
-
-    const user = new User({ fullName, email, password });
-    await user.save();
-
-    const accessToken = jwt.sign(
-      { _id: user._id, email: user.email }, // 👈 sirf zaruri data bhejo
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "30000m" }
-    );
-
-    return res.json({
-      error: false,
-      user,
-      accessToken,
-      message: "Registration Successful",
-    });
-  } catch (error) {
-    console.error("Signup Error:", error);
-    return res.status(500).json({
-      error: true,
-      message: "Internal Server Error",
-    });
-  }
-});
 
 
-// login
-app.post("/login", async (req, res) => {
-  
-  const { email, password } = req.body
-  if (!email) {
-    return res.status(400).json({ message: "Email is require" });
-  }
-  if (!password) {
-    return res.status(400).json({ message: "Password is require" });
-  }
-  const userInfo = await User.findOne({ email: email })
-  if (!userInfo) {
-    return res.status(400).json({ message: "User not found" });
-  }
-  if (userInfo.email == email && userInfo.password == password) {
-    const user = { user: userInfo };
-    const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-      expiresIn: "36000m"
-    });
-    return res.status(200).json({
-      error: false,
-      message: "Login Successful",
-      email,
-      accessToken,
-    })
-  } else {
-    return res.status(400).json({
-      error: true,
-      message: "Invalid Credentials",
-    });
-  }
-})
+app.use(userRouter)
+
+
 
 
 // get user 
 app.get("/get-user", authenticateToken, async (req, res) => {
   try {
-    console.log("User from token:", req.user);
-    let {user} = req.user
-    if (!user || !user._id) {
-      return res.status(400).json({ error: true, message: "Invalid token data" });
-    }
+    const user = await User.findById(req.user._id).select("-password");
 
-    // const user = await User.findById(req.user._id).select("-password");
-    console.log("User from DB:", user);
-    
     if (!user) {
       return res.status(404).json({ error: true, message: "User not found" });
     }
 
-    res.json({ 
+    res.json({
       error: false,
       user,
-      message: "User data retrieved successfully"
+      message: "User data retrieved successfully",
     });
-  } catch (err) {
-    console.error("Error in /get-user:", err.message);
-    res.status(500).json({ 
-      error: true, 
-      message: "Internal Server Error" 
-    });
+  } catch (error) {
+    res.status(500).json({ error: true, message: "Internal Server Error" });
   }
 });
+
 
 
 // add notes

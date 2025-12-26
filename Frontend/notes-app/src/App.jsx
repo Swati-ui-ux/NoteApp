@@ -7,6 +7,7 @@ import Login from './pages/Login/Login'
 let routes = (
   <Router>
     <Routes>
+        <Route path='/' exect element={<Home />} />
       <Route path='/dashboard' exect element={<Home />} />
     <Route path='/login' exect element={<Login/>}/>
     <Route path='/signup' exect element={<SignUp/>}/>

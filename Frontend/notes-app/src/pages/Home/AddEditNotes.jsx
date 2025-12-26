@@ -64,7 +64,7 @@ const AddEditNotes = ({ showToastMsg,noteData,getAllNotes,type,onClose }) => {
         }
     }
   return (
-    <div className="relative"> {/* relative lagana zaruri hai */}
+    <div className="relative"> 
       <button 
         className='w-10 h-10 rounded-full flex items-center justify-center absolute -top-3 -right-3 hover:bg-slate-200' 
         onClick={onClose}
@@ -111,3 +111,5 @@ const AddEditNotes = ({ showToastMsg,noteData,getAllNotes,type,onClose }) => {
 }
 
 export default AddEditNotes
+
+
