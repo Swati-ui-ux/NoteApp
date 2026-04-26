@@ -200,7 +200,7 @@ const Home = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 m-8'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 h-8 gap-4 m-8'>
             {allNotes.length > 0 ? (
               allNotes.map((item) => (
                 <NoteCard 
